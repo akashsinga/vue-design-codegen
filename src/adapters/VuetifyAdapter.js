@@ -14,7 +14,7 @@ export class VuetifyAdapter extends LibraryAdapter {
 
     getImportStatement(componentName) {
         const actualComponent = this.getComponent(componentName)
-        return `import { ${actualComponent} } from vuetify/componnets`
+        return `import { ${actualComponent} } from vuetify/components`
     }
 
     initializeComponentMappings() {

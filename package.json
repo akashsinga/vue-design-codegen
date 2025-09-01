@@ -6,7 +6,7 @@
   "author": "akashsinga@gmail.com",
   "license": "MIT",
   "scripts": {
-    "build": "node src/cli/build/js",
+    "build": "node src/cli/build.js",
     "generate": "node src/cli/generate.js",
     "setup": "node setup.js"
   },
