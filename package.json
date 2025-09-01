@@ -1,0 +1,29 @@
+{
+  "name": "vue-design-codegen",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "author": "akashsinga@gmail.com",
+  "license": "MIT",
+  "scripts": {
+    "build": "node src/cli/build/js",
+    "generate": "node src/cli/generate.js",
+    "setup": "node setup.js"
+  },
+  "devDependencies": {
+    "primevue": "^3.53.1",
+    "vite": "^7.1.2",
+    "vue": "^3.5.20"
+  },
+  "dependencies": {
+    "@babel/core": "^7.28.3",
+    "@babel/generator": "^7.28.3",
+    "@babel/parser": "^7.28.3",
+    "@babel/traverse": "^7.28.3",
+    "@babel/types": "^7.28.2",
+    "chalk": "^5.6.0",
+    "chokidar": "^4.0.3",
+    "fs-extra": "^11.3.1",
+    "glob": "^11.0.3"
+  }
+}
