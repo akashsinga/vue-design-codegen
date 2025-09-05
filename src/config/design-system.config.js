@@ -15,7 +15,7 @@ export default {
     ],
 
     // Component configuration
-    componentPrefix: '', // No prefix by default
+    componentPrefix: 'OP', // No prefix by default
     globalComponents: true, // Register components globally
     strictMode: false, // Allow partial failures during development
 
@@ -119,14 +119,6 @@ export default {
                 }
             }
         },
-
-        // Quasar specific options
-        quasar: {
-            brand: {
-                primary: '#3B82F6',
-                secondary: '#6B7280'
-            }
-        }
     },
 
     // Build configuration
@@ -205,28 +197,6 @@ export default {
         }
     },
 
-    // Testing configuration
-    testing: {
-        // Unit testing
-        unit: {
-            framework: 'vitest',
-            coverage: true,
-            threshold: 80
-        },
-
-        // Visual regression testing
-        visual: {
-            enabled: false,
-            threshold: 0.02
-        },
-
-        // Accessibility testing
-        a11y: {
-            enabled: true,
-            rules: 'wcag2aa'
-        }
-    },
-
     // Documentation configuration
     documentation: {
         // Generate documentation
@@ -294,7 +264,7 @@ export default {
             targetLibrary: {
                 type: 'string',
                 required: true,
-                enum: ['primevue', 'vuetify', 'quasar', 'antdv']
+                enum: ['primevue', 'vuetify']
             },
             components: {
                 type: 'object',
