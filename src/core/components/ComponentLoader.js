@@ -271,7 +271,7 @@ export class ComponentLoader {
      */
     async getAvailableComponents() {
         // This would scan the components directory for available configs
-        const components = ['Button', 'Card', 'InputText', 'DataTable', 'Select'];
+        const components = ['Button'];
         const available = [];
 
         for (const component of components) {

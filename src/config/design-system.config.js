@@ -6,16 +6,12 @@ export default {
     description: 'Configuration-driven Vue.js design system with zero runtime overhead',
 
     // Target library configuration
-    targetLibrary: 'primevue',
-    libraryVersion: '^3.53.1',
+    targetLibrary: 'vuetify',
+    libraryVersion: '3.6.1',
 
     // Components to include in the design system
     components: [
         'Button',
-        'Card',
-        'InputText',
-        'DataTable',
-        'Select'
     ],
 
     // Component configuration
@@ -301,7 +297,7 @@ export default {
                 enum: ['primevue', 'vuetify', 'quasar', 'antdv']
             },
             components: {
-                type: 'array',
+                type: 'object',
                 required: true,
                 minItems: 1,
                 items: {
