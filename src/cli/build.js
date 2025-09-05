@@ -15,136 +15,136 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 async function build() {
-    console.log(chalk.blue.bold('Openprise Design System Builder'))
-    console.log(chalk.gray('Generating optimized components'))
+  console.log(chalk.blue.bold('Openprise Design System Builder'))
+  console.log(chalk.gray('Generating optimized components'))
 
-    const startTime = performance.now()
+  const startTime = performance.now()
 
-    try {
-        console.log(chalk.blue('Loading Configuration'))
-        const { default: ConfigurationLoader } = await import('../core/ConfigurationLoader.js')
-        const config = await ConfigurationLoader.loadConfig('design-system-config.js')
+  try {
+    console.log(chalk.blue('Loading Configuration'))
+    const { default: ConfigurationLoader } = await import('../core/ConfigurationLoader.js')
+    const config = await ConfigurationLoader.loadConfig('design-system.config.js')
 
-        console.log(chalk.green('Configuration Loaded'))
-        console.log(chalk.gray(`Target Library: ${config.targetLibrary}`))
-        console.log(chalk.gray(`Components: ${config.components?.length || 0}\n`))
+    console.log(chalk.green('Configuration Loaded'))
+    console.log(chalk.gray(`Target Library: ${config.targetLibrary}`))
+    console.log(chalk.gray(`Components: ${config.components?.length || 0}\n`))
 
-        console.log(chalk.blue('Initializing System Components'))
-        const { default: ComponentGenerator } = await import('../core/components/ComponentGenerator.js')
-        const { default: AdapterLoader } = await import('../core/adapters/AdapterLoader.js')
+    console.log(chalk.blue('Initializing System Components'))
+    const { default: ComponentGenerator } = await import('../core/components/ComponentGenerator.js')
+    const { default: AdapterLoader } = await import('../core/adapters/AdapterLoader.js')
 
-        await AdapterLoader.loadAdapter(config.targetLibrary, { validate: true })
-        console.log(chalk.green(`Adapter Validated: ${config.targetLibrary}`))
+    await AdapterLoader.loadAdapter(config.targetLibrary, { validate: true })
+    console.log(chalk.green(`Adapter Validated: ${config.targetLibrary}`))
 
-        const outputDir = path.resolve('./dist')
-        await fs.mkdir(outputDir, { recursive: true })
+    const outputDir = path.resolve('./dist')
+    await fs.mkdir(outputDir, { recursive: true })
 
-        const componentsDir = path.join(outputDir, 'components')
-        await fs.mkdir(componentsDir, { recursive: true })
+    const componentsDir = path.join(outputDir, 'components')
+    await fs.mkdir(componentsDir, { recursive: true })
 
-        console.log(chalk.green(`Output directory created: ${outputDir}\n`))
-        console.log(chalk.blue('Generating Components'))
+    console.log(chalk.green(`Output directory created: ${outputDir}\n`))
+    console.log(chalk.blue('Generating Components'))
 
-        const generationResults = { success: [], failed: [], totalSize: 0, totalTime: 0 }
+    const generationResults = { success: [], failed: [], totalSize: 0, totalTime: 0 }
 
-        for (const componentName of config.components || []) {
-            const componentStartTime = performance.now()
+    for (const componentName of config.components || []) {
+      const componentStartTime = performance.now()
 
-            try {
-                console.log(chalk.gray(`Generating ${componentName}`))
+      try {
+        console.log(chalk.gray(`Generating ${componentName}`))
 
-                const result = await ComponentGenerator.generateComponent(componentName, config.targetLibrary, { format: 'sfc', optimize: true, includeTypes: true })
+        const result = await ComponentGenerator.generateComponent(componentName, config.targetLibrary, { format: 'sfc', optimize: true, includeTypes: true })
 
-                const componentPath = path.join(componentsDir, result.component.filename)
-                await fs.writeFile(componentPath, result.component.content)
+        const componentPath = path.join(componentsDir, result.component.filename)
+        await fs.writeFile(componentPath, result.component.content)
 
-                const componentEndTime = performance.now()
-                const componentTime = componentEndTime - componentStartTime
-                const componentSize = result.component.content.length
+        const componentEndTime = performance.now()
+        const componentTime = componentEndTime - componentStartTime
+        const componentSize = result.component.content.length
 
-                generationResults.success.push({ name: componentName, time: componentTime, size: componentSize, path: componentPath })
+        generationResults.success.push({ name: componentName, time: componentTime, size: componentSize, path: componentPath })
 
-                generationResults.totalTime += componentTime
-                generationResults.totalSize += componentSize
+        generationResults.totalTime += componentTime
+        generationResults.totalSize += componentSize
 
-                console.log(chalk.green(`${componentName} (${componentTime.toFixed(1)}ms ${componentSize} bytes)\n`))
-            } catch (error) {
-                generationResults.failed.push({ name: componentName, error: error.message })
-                console.log(chalk.red(`${componentName}: ${error.message}\n`))
-            }
-        }
-
-        console.log(chalk.blue('Creating library bundle'))
-
-        const indexContent = generateIndexFile(generationResults.success, config)
-        const indexPath = path.join(outputDir, 'index.js')
-        await fs.writeFile(indexPath, indexContent)
-
-        const typesContent = generateTypeDefinitions(generationResults.success, config)
-        const typesPath = path.join(outputDir, 'index.d.ts')
-        await fs.writeFile(typesPath, typesContent)
-
-        const pluginContent = generateVuePlugin(generationResults.success, config)
-        const pluginPath = path.join(outputDir, 'plugin.js')
-        await fs.writeFile(pluginPath, pluginContent)
-
-        const stylesContent = generateStyles(config)
-        const stylesPath = path.join(outputDir, 'styles.css')
-        await fs.writeFile(stylesPath, stylesContent)
-
-        console.log('Library Bundle created\n')
-
-        // Build Summary
-        const endTime = performance.now()
-        const totalTime = endTime - startTime
-
-        console.log(chalk.green.bold('Build completed successfully\n'))
-        console.log(chalk.bold('Build Summary'))
-        console.table({
-            'Total Time': `${totalTime.toFixed(1)}ms`,
-            'Components Generated': generationResults.success.length,
-            'Components Failed': generationResults.failed.length,
-            'Total Bundle Size': `${((generationResults.totalSize / 1024).toFixed(2))}KB`,
-            'Average Generation Time': `${(generationResults.totalTime / generationResults.success.length).toFixed(1)}ms`,
-            'Target Library': config.targetLibrary,
-            'Output Directory': outputDir
-        })
-
-        if (generationResults.failed.length > 0) {
-            console.log(chalk.yellow.bold('⚠️  Failed Components:'));
-            generationResults.failed.forEach(failed => {
-                console.log(chalk.red(`   • ${failed.name}: ${failed.error}`));
-            });
-        }
-
-        console.log(chalk.blue.bold('📁 Generated Files:'));
-        console.log(chalk.gray(`   ${indexPath}`));
-        console.log(chalk.gray(`   ${typesPath}`));
-        console.log(chalk.gray(`   ${pluginPath}`));
-        console.log(chalk.gray(`   ${stylesPath}`));
-        console.log(chalk.gray(`   ${componentsDir}/ (${generationResults.success.length} components)`));
-
-        console.log(chalk.green('✨ Your zero-overhead design system is ready!'));
-        console.log(chalk.gray('   Installation: npm install ' + path.relative(process.cwd(), outputDir)));
-        console.log(chalk.gray('   Usage: import DesignSystem from "' + path.relative(process.cwd(), outputDir) + '"'));
-    } catch (error) {
-        console.error(chalk.red.bold('❌ Build failed:'), error.message);
-        console.error(chalk.gray(error.stack));
-        process.exit(1);
+        console.log(chalk.green(`${componentName} (${componentTime.toFixed(1)}ms ${componentSize} bytes)\n`))
+      } catch (error) {
+        generationResults.failed.push({ name: componentName, error: error.message })
+        console.log(chalk.red(`${componentName}: ${error.message}\n`))
+      }
     }
+
+    console.log(chalk.blue('Creating library bundle'))
+
+    const indexContent = generateIndexFile(generationResults.success, config)
+    const indexPath = path.join(outputDir, 'index.js')
+    await fs.writeFile(indexPath, indexContent)
+
+    const typesContent = generateTypeDefinitions(generationResults.success, config)
+    const typesPath = path.join(outputDir, 'index.d.ts')
+    await fs.writeFile(typesPath, typesContent)
+
+    const pluginContent = generateVuePlugin(generationResults.success, config)
+    const pluginPath = path.join(outputDir, 'plugin.js')
+    await fs.writeFile(pluginPath, pluginContent)
+
+    const stylesContent = generateStyles(config)
+    const stylesPath = path.join(outputDir, 'styles.css')
+    await fs.writeFile(stylesPath, stylesContent)
+
+    console.log('Library Bundle created\n')
+
+    // Build Summary
+    const endTime = performance.now()
+    const totalTime = endTime - startTime
+
+    console.log(chalk.green.bold('Build completed successfully\n'))
+    console.log(chalk.bold('Build Summary'))
+    console.table({
+      'Total Time': `${totalTime.toFixed(1)}ms`,
+      'Components Generated': generationResults.success.length,
+      'Components Failed': generationResults.failed.length,
+      'Total Bundle Size': `${((generationResults.totalSize / 1024).toFixed(2))}KB`,
+      'Average Generation Time': `${(generationResults.totalTime / generationResults.success.length).toFixed(1)}ms`,
+      'Target Library': config.targetLibrary,
+      'Output Directory': outputDir
+    })
+
+    if (generationResults.failed.length > 0) {
+      console.log(chalk.yellow.bold('⚠️  Failed Components:'));
+      generationResults.failed.forEach(failed => {
+        console.log(chalk.red(`   • ${failed.name}: ${failed.error}`));
+      });
+    }
+
+    console.log(chalk.blue.bold('📁 Generated Files:'));
+    console.log(chalk.gray(`   ${indexPath}`));
+    console.log(chalk.gray(`   ${typesPath}`));
+    console.log(chalk.gray(`   ${pluginPath}`));
+    console.log(chalk.gray(`   ${stylesPath}`));
+    console.log(chalk.gray(`   ${componentsDir}/ (${generationResults.success.length} components)`));
+
+    console.log(chalk.green('✨ Your zero-overhead design system is ready!'));
+    console.log(chalk.gray('   Installation: npm install ' + path.relative(process.cwd(), outputDir)));
+    console.log(chalk.gray('   Usage: import DesignSystem from "' + path.relative(process.cwd(), outputDir) + '"'));
+  } catch (error) {
+    console.error(chalk.red.bold('❌ Build failed:'), error.message);
+    console.error(chalk.gray(error.stack));
+    process.exit(1);
+  }
 }
 
 /**
  * Generate index file for the library
  */
 function generateIndexFile(successfulComponents, config) {
-    const imports = successfulComponents.map(comp =>
-        `import ${comp.name} from './components/${comp.name}.vue';`
-    ).join('\n');
+  const imports = successfulComponents.map(comp =>
+    `import ${comp.name} from './components/${comp.name}.vue';`
+  ).join('\n');
 
-    const componentsList = successfulComponents.map(comp => comp.name).join(', ');
+  const componentsList = successfulComponents.map(comp => comp.name).join(', ');
 
-    return `// Generated by Zero-Overhead Design System
+  return `// Generated by Zero-Overhead Design System
 // Target Library: ${config.targetLibrary}
 // Generated: ${new Date().toISOString()}
 
@@ -189,13 +189,13 @@ export default {
  * Generate TypeScript definitions
  */
 function generateTypeDefinitions(successfulComponents, config) {
-    const componentInterfaces = successfulComponents.map(comp =>
-        `export declare const ${comp.name}: import('vue').DefineComponent<{}, {}, any>;`
-    ).join('\n');
+  const componentInterfaces = successfulComponents.map(comp =>
+    `export declare const ${comp.name}: import('vue').DefineComponent<{}, {}, any>;`
+  ).join('\n');
 
-    const componentsList = successfulComponents.map(comp => comp.name).join(' | ');
+  const componentsList = successfulComponents.map(comp => comp.name).join(' | ');
 
-    return `// Generated TypeScript definitions
+  return `// Generated TypeScript definitions
 // Target Library: ${config.targetLibrary}
 // Generated: ${new Date().toISOString()}
 
@@ -239,13 +239,13 @@ declare module '@vue/runtime-core' {
  * Generate Vue plugin
  */
 function generateVuePlugin(successfulComponents, config) {
-    const imports = successfulComponents.map(comp =>
-        `import ${comp.name} from './components/${comp.name}.vue';`
-    ).join('\n');
+  const imports = successfulComponents.map(comp =>
+    `import ${comp.name} from './components/${comp.name}.vue';`
+  ).join('\n');
 
-    const componentsList = successfulComponents.map(comp => comp.name).join(', ');
+  const componentsList = successfulComponents.map(comp => comp.name).join(', ');
 
-    return `// Vue Plugin for Zero-Overhead Design System
+  return `// Vue Plugin for Zero-Overhead Design System
 // Target Library: ${config.targetLibrary}
 // Generated: ${new Date().toISOString()}
 
@@ -294,7 +294,7 @@ export { ${componentsList} };
  * Generate styles
  */
 function generateStyles(config) {
-    return `/* Zero-Overhead Design System Styles */
+  return `/* Zero-Overhead Design System Styles */
 /* Target Library: ${config.targetLibrary} */
 /* Generated: ${new Date().toISOString()} */
 
@@ -345,8 +345,8 @@ function generateStyles(config) {
 }
 
 // Run build if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-    build().catch(console.error);
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  build().catch(console.error);
 }
 
 export default build;
