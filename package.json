@@ -7,13 +7,8 @@
   "author": "akashsinga@gmail.com",
   "license": "MIT",
   "scripts": {
-    "dev": "vite --host",
     "build": "node src/cli/build.js",
-    "generate": "node src/cli/generate.js",
-    "generate-all": "node src/cli/generate.js generate-all",
-    "migrate": "node src/cli/generate.js migrate",
-    "list": "node src/cli/generate.js list",
-    "validate": "node src/cli/generate.js validate"
+    "migrate": "node src/cli/build.js migrate"
   },
   "main": "src/index.js",
   "exports": {
@@ -23,9 +18,6 @@
     },
     "./plugin": {
       "import": "./src/core/plugins/DesignSystemPlugin.js"
-    },
-    "./utils": {
-      "import": "./src/utils/index.js"
     }
   },
   "engines": {
