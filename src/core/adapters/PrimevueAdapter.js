@@ -1,8 +1,8 @@
 /**
- * Adapter Implementation for Vuetify.
+ * Adapter Implementation for PrimeVue.
  * Extends LibraryAdapter with sync interface and Windows path support
  * 
- * File: src/core/adapters/VuetifyAdapter.js
+ * File: src/core/adapters/PrimeVueAdapter.js
  */
 
 import { LibraryAdapter } from './LibraryAdapter.js'
@@ -11,11 +11,11 @@ import { pathToFileURL } from 'url'
 import chalk from 'chalk'
 import path from 'path'
 
-export class VuetifyAdapter extends LibraryAdapter {
-    constructor(version = '3.6.1') {
-        super('vuetify', version)
+export class PrimeVueAdapter extends LibraryAdapter {
+    constructor(version = '3.45.0') {
+        super('PrimeVue', version)
         this.configsLoaded = false
-        this.configDir = path.resolve('./src/configs/vuetify')
+        this.configDir = path.resolve('./src/configs/primevue')
         this.configPromise = null
     }
 
@@ -27,7 +27,9 @@ export class VuetifyAdapter extends LibraryAdapter {
     getImportStatement(componentName) {
         this.ensureConfigsLoaded()
         const actualComponent = this.getComponent(componentName)
-        return `import { ${actualComponent} } from 'vuetify/components'`
+        // PrimeVue uses lowercase component names in import paths
+        const importPath = actualComponent.toLowerCase()
+        return `import ${actualComponent} from 'primevue/${importPath}';`
     }
 
     /**
@@ -61,7 +63,7 @@ export class VuetifyAdapter extends LibraryAdapter {
         }
 
         if (!this.configsLoaded) {
-            throw new Error('Vuetify adapter configs not loaded. Call await adapter.initialize() first.')
+            throw new Error('PrimeVue adapter configs not loaded. Call await adapter.initialize() first.')
         }
     }
 
@@ -82,7 +84,7 @@ export class VuetifyAdapter extends LibraryAdapter {
         if (this.configsLoaded) return
 
         if (!existsSync(this.configDir)) {
-            console.log(chalk.yellow(`Vuetify config directory not found: ${this.configDir}`))
+            console.log(chalk.yellow(`PrimeVue config directory not found: ${this.configDir}`))
             this.configsLoaded = true
             return
         }
@@ -100,9 +102,9 @@ export class VuetifyAdapter extends LibraryAdapter {
             )
 
             this.configsLoaded = true
-            console.log(chalk.green(`Loaded ${configFiles.length} Vuetify component configs`))
+            console.log(chalk.green(`Loaded ${configFiles.length} PrimeVue component configs`))
         } catch (error) {
-            console.log(chalk.yellow(`Error loading Vuetify configurations: ${error.message}`))
+            console.log(chalk.yellow(`Error loading PrimeVue configurations: ${error.message}`))
             this.configsLoaded = true
         }
     }

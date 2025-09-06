@@ -5,7 +5,8 @@
  * File: src/core/components/ComponentGenerator.js
  */
 
-import { ensureDirSync, writeFileSync } from 'fs-extra'
+import { ensureDirSync } from 'fs-extra'
+import { writeFileSync } from 'fs'
 import chalk from 'chalk'
 import path from 'path'
 import { TransformationEngine } from './TransformationEngine.js'
@@ -27,7 +28,12 @@ export class ComponentGenerator {
     async generateComponent(config) {
         this.validateConfig(config)
 
-        const templateData = await this.buildTemplateData(config)
+        // Initialize adapter if needed
+        if (this.libraryAdapter && typeof this.libraryAdapter.initialize === 'function') {
+            await this.libraryAdapter.initialize()
+        }
+
+        const templateData = this.buildTemplateData(config)
         const componentCode = this.renderTemplate(templateData)
         const outputPath = this.writeComponent(config.name, componentCode)
 
@@ -47,22 +53,41 @@ export class ComponentGenerator {
      * @param {Object} config
      * @returns {Object} All data.
      */
-    async buildTemplateData(config) {
-        const baseComponent = await this.getBaseComponent(config)
-        const importStatement = await this.getImportStatement(config)
+    buildTemplateData(config) {
+        const baseComponent = this.getBaseComponent(config)
+        const importStatement = this.getImportStatement(config)
 
         return {
             componentName: config.name,
             baseComponent,
             importStatement,
             propsDefinition: this.transformationEngine.generatePropsDefinition(config.props),
-            templateProps: this.transformationEngine.generateTemplatePropBindings(config.propMappings),
+            templateProps: this.generateAllTemplatePropBindings(config),
             templateEvents: this.transformationEngine.generateEventBindings(config.events),
             computedProperties: this.transformationEngine.generateComputedProperties(config.propMappings),
             emitsArray: this.buildEmitsArray(config.events),
             slots: this.buildSlots(config.slots),
             styles: config.styles || ''
         }
+    }
+
+    /**
+     * Generate template prop bindings including unmapped props
+     * @param {Object} config - Component configuration
+     * @returns {string} All template prop bindings
+     */
+    generateAllTemplatePropBindings(config) {
+        const mappedBindings = this.transformationEngine.generateTemplatePropBindings(config.propMappings)
+
+        // Find props that don't have explicit mappings and add direct bindings for them
+        const mappedSources = config.propMappings ? config.propMappings.map(m => m.source).filter(Boolean) : []
+        const unmappedProps = config.props ? config.props.filter(prop => !mappedSources.includes(prop.name)) : []
+
+        const unmappedBindings = unmappedProps.map(prop => `:${prop.name}="${prop.name}"`).join('\n    ')
+
+        const allBindings = [mappedBindings, unmappedBindings].filter(Boolean)
+
+        return allBindings.length > 0 ? '\n    ' + allBindings.join('\n    ') : ''
     }
 
     /**

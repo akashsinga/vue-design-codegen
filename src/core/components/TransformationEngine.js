@@ -1,6 +1,8 @@
 /**
  * Streamlined Transformation Engine
  * Zero-overhead prop transformation through static code generation
+ * 
+ * File: src/core/components/TransformationEngine.js
  */
 export class TransformationEngine {
     constructor(libraryAdapter = null) {
@@ -72,7 +74,11 @@ export class TransformationEngine {
         const condition = this.processCondition(mapping.condition, mapping.source)
         const fallback = mapping.fallback || 'undefined'
 
-        return `:${mapping.target}="${condition} ? ${mapping.source} : ${fallback}"`
+        // Properly escape quotes in template bindings
+        const escapedCondition = condition.replace(/"/g, "'")
+        const escapedFallback = fallback.replace(/"/g, "'")
+
+        return `:${mapping.target}="${escapedCondition} ? ${mapping.source} : ${escapedFallback}"`
     }
 
     /**
@@ -137,10 +143,10 @@ export class TransformationEngine {
         props.forEach((prop, index) => {
             const propLines = []
             propLines.push(`${prop.name}: {`)
-            propLines.push(`  type: ${this.getVueType(prop.type)}`)
+            propLines.push(`  type: ${this.getVueType(prop.type)},`)
 
             if (prop.default !== undefined) {
-                propLines.push(`  default: ${this.formatDefaultValue(prop.default, prop.type)}`)
+                propLines.push(`  default: ${this.formatDefaultValue(prop.default, prop.type)},`)
             }
 
             if (prop.required !== undefined) {
@@ -188,7 +194,8 @@ export class TransformationEngine {
             } else if (mapping.type === 'value') {
                 const computedName = `computed${mapping.target.charAt(0).toUpperCase() + mapping.target.slice(1)}`
                 lines.push(`    ${computedName}() {`)
-                lines.push(`      return ${mapping.transform}(this.${mapping.source})`)
+                // Fix the value transformation syntax
+                lines.push(`      return (${mapping.transform})(this.${mapping.source})`)
             }
 
             const isLast = index === computedProps.length - 1
