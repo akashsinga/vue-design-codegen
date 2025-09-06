@@ -246,6 +246,8 @@ export const lightTheme = {
         'dialog-exit': motionTokens.componentMotion.dialog.exit
     },
 
+    variables: {},
+
     // Component-specific overrides and variations
     components: {
         // Button variants

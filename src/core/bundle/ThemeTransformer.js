@@ -39,7 +39,8 @@ export class ThemeTransformer {
             spacing: themeData.spacing || {},
             shadows: themeData.shadows || {},
             borders: themeData.borders || {},
-            motion: themeData.motion || {}
+            motion: themeData.motion || {},
+            variables: themeData.variables || {}
         }
     }
 

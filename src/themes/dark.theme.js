@@ -250,6 +250,8 @@ export const darkTheme = {
         'dialog-exit': motionTokens.componentMotion.dialog.exit
     },
 
+    variables: {},
+
     // Component-specific overrides for dark theme
     components: {
         // Button variants (adjusted for dark theme)
