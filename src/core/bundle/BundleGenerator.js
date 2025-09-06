@@ -91,10 +91,10 @@ export * from './core.js'
         lines.push('')
 
         // Re-export the library components for internal use
-        this.generatedComponents.forEach(comp => {
-            const baseComponent = this.adapter.getComponent(comp.originalName)
-            lines.push(`export { ${baseComponent} }`)
-        })
+        // this.generatedComponents.forEach(comp => {
+        //     const baseComponent = this.adapter.getComponent(comp.originalName)
+        //     lines.push(`export { ${baseComponent} }`)
+        // })
         lines.push('')
 
         lines.push('// Internal imports')
