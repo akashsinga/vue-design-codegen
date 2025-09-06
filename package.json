@@ -7,8 +7,8 @@
   "author": "akashsinga@gmail.com",
   "license": "MIT",
   "scripts": {
-    "build": "node src/cli/build.js",
-    "migrate": "node src/cli/build.js migrate"
+    "build": "node src/scripts/build.js",
+    "generate": "node src/scripts/generate.js generate"
   },
   "main": "src/index.js",
   "exports": {
