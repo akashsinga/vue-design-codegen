@@ -1,6 +1,7 @@
 /**
  * Core Component Generation Engine.
  * Transforms configuration objects into optimized Vue Components.
+ * Enhanced with bundle mode support for self-contained packages.
  * 
  * File: src/core/components/ComponentGenerator.js
  */
@@ -18,6 +19,12 @@ export class ComponentGenerator {
         this.templateType = options.templateType || 'sfc'
         this.transformationEngine = new TransformationEngine(this.libraryAdapter)
         this.templateCache = new Map()
+
+        // Bundle mode options
+        this.bundleMode = options.bundleMode || false
+        this.componentPrefix = options.componentPrefix || (this.bundleMode ? 'DS' : '')
+        this.internalLibraryPath = options.internalLibraryPath || '../lib/design-system.js'
+        this.designTokens = options.designTokens || null
     }
 
     /**
@@ -35,15 +42,18 @@ export class ComponentGenerator {
 
         const templateData = this.buildTemplateData(config)
         const componentCode = this.renderTemplate(templateData)
-        const outputPath = this.writeComponent(config.name, componentCode)
+        const componentName = this.getComponentName(config.name)
+        const outputPath = this.writeComponent(componentName, componentCode)
 
         return {
-            name: config.name,
+            name: componentName,
+            originalName: config.name,
             path: outputPath,
             metadata: {
                 generatedAt: new Date().toISOString(),
                 library: this.libraryAdapter?.name || 'generic',
-                templateType: this.templateType
+                templateType: this.templateType,
+                bundleMode: this.bundleMode
             }
         }
     }
@@ -56,9 +66,10 @@ export class ComponentGenerator {
     buildTemplateData(config) {
         const baseComponent = this.getBaseComponent(config)
         const importStatement = this.getImportStatement(config)
+        const componentName = this.getComponentName(config.name)
 
         return {
-            componentName: config.name,
+            componentName,
             baseComponent,
             importStatement,
             propsDefinition: this.transformationEngine.generatePropsDefinition(config.props),
@@ -67,8 +78,19 @@ export class ComponentGenerator {
             computedProperties: this.transformationEngine.generateComputedProperties(config.propMappings),
             emitsArray: this.buildEmitsArray(config.events),
             slots: this.buildSlots(config.slots),
-            styles: config.styles || ''
+            styles: this.buildStyles(config)
         }
+    }
+
+    /**
+     * Get component name with prefix for bundle mode
+     * @param {String} name - Original component name
+     * @returns {String} - Component name with prefix if in bundle mode
+     */
+    getComponentName(name) {
+        return this.bundleMode && this.componentPrefix
+            ? `${this.componentPrefix}${name}`
+            : name
     }
 
     /**
@@ -116,12 +138,14 @@ export class ComponentGenerator {
      * @returns {String}
      */
     getTemplate(type) {
-        if (this.templateCache.has(type)) {
-            return this.templateCache.get(type)
+        const cacheKey = `${type}-${this.bundleMode ? 'bundle' : 'dev'}`
+
+        if (this.templateCache.has(cacheKey)) {
+            return this.templateCache.get(cacheKey)
         }
 
         const template = type === 'sfc' ? this.getSFCTemplate() : this.getJSXTemplate()
-        this.templateCache.set(type, template)
+        this.templateCache.set(cacheKey, template)
         return template
     }
 
@@ -208,11 +232,19 @@ export class ComponentGenerator {
     }
 
     /**
-     * Gets import statement from adapter.
+     * Gets import statement from adapter with bundle mode support.
      * @param {Object} config
      * @returns {String}
      */
     getImportStatement(config) {
+        const baseComponent = this.getBaseComponent(config)
+
+        if (this.bundleMode) {
+            // In bundle mode, import from internal library path
+            return `import { ${baseComponent} } from '${this.internalLibraryPath}'`
+        }
+
+        // Development mode - use adapter import statements
         if (this.libraryAdapter && this.libraryAdapter.hasComponent(config.name)) {
             return this.libraryAdapter.getImportStatement(config.name)
         }
@@ -269,6 +301,76 @@ export class ComponentGenerator {
     }
 
     /**
+     * Build styles with design token integration
+     * @param {Object} config - Component configuration
+     * @returns {String} - CSS styles
+     */
+    buildStyles(config) {
+        let styles = config.styles || ''
+
+        // In bundle mode, integrate design tokens if available
+        if (this.bundleMode && this.designTokens) {
+            styles += this.generateTokenStyles()
+        }
+
+        return styles
+    }
+
+    /**
+     * Generate CSS styles using design tokens
+     * @returns {String} - CSS with design token variables
+     */
+    generateTokenStyles() {
+        if (!this.designTokens) return ''
+
+        // Add CSS that uses design token variables
+        return `
+/* Design system token integration */
+:root {
+  /* Colors will be injected by design system */
+}
+`
+    }
+
+    /**
+     * Generate component index file for exports
+     * @param {Array} components - Array of generated component results
+     * @param {String} outputPath - Path to write index file
+     */
+    generateComponentIndex(components, outputPath = null) {
+        const indexPath = outputPath || path.join(this.outputDir, 'index.js')
+
+        const imports = components.map(comp =>
+            `import ${comp.name} from './${comp.name}.vue'`
+        ).join('\n')
+
+        const exports = components.map(comp => comp.name).join(', ')
+
+        const namedExports = components.map(comp =>
+            `export { default as ${comp.name} } from './${comp.name}.vue'`
+        ).join('\n')
+
+        const indexContent = `${imports}
+
+// Default export object for bulk registration
+export default {
+  ${exports}
+}
+
+// Named exports for individual imports
+${namedExports}
+
+// Component list for programmatic access
+export const componentList = [${exports}]
+`
+
+        ensureDirSync(path.dirname(indexPath))
+        writeFileSync(indexPath, indexContent)
+
+        return indexPath
+    }
+
+    /**
     * Validate component configuration
     */
     validateConfig(config) {
@@ -290,5 +392,26 @@ export class ComponentGenerator {
         this.libraryAdapter = adapter
         this.transformationEngine = new TransformationEngine(adapter)
         this.templateCache.clear()
+    }
+
+    /**
+     * Set design tokens for bundle mode
+     */
+    setDesignTokens(tokens) {
+        this.designTokens = tokens
+    }
+
+    /**
+     * Get bundle mode status
+     */
+    isBundleMode() {
+        return this.bundleMode
+    }
+
+    /**
+     * Get generated component names (useful for bundling)
+     */
+    getGeneratedComponentNames(configs) {
+        return configs.map(config => this.getComponentName(config.name))
     }
 }
