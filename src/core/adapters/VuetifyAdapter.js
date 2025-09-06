@@ -1,6 +1,6 @@
 /**
  * Adapter Implementation for Vuetify.
- * Extends LibraryAdapter with ES Module support
+ * Extends LibraryAdapter with sync interface
  * 
  * File: src/core/adapters/VuetifyAdapter.js
  */
@@ -15,6 +15,7 @@ export class VuetifyAdapter extends LibraryAdapter {
         super('vuetify', version)
         this.configsLoaded = false
         this.configDir = path.resolve('./src/configs/vuetify')
+        this.configPromise = null
     }
 
     /**
@@ -22,8 +23,8 @@ export class VuetifyAdapter extends LibraryAdapter {
      * @param {String} componentName - Component name
      * @returns {String}
      */
-    async getImportStatement(componentName) {
-        await this.ensureConfigsLoaded()
+    getImportStatement(componentName) {
+        this.ensureConfigsLoaded()
         const actualComponent = this.getComponent(componentName)
         return `import { ${actualComponent} } from 'vuetify/components'`
     }
@@ -33,8 +34,8 @@ export class VuetifyAdapter extends LibraryAdapter {
      * @param {String} semanticName
      * @returns {String}
      */
-    async getComponent(semanticName) {
-        await this.ensureConfigsLoaded()
+    getComponent(semanticName) {
+        this.ensureConfigsLoaded()
         return super.getComponent(semanticName)
     }
 
@@ -43,15 +44,42 @@ export class VuetifyAdapter extends LibraryAdapter {
      * @param {String} semanticName
      * @returns {Boolean}
      */
-    async hasComponent(semanticName) {
-        await this.ensureConfigsLoaded()
+    hasComponent(semanticName) {
+        this.ensureConfigsLoaded()
         return super.hasComponent(semanticName)
     }
 
     /**
-     * Lazy load configurations when first needed.
+     * Synchronously ensure configs are loaded (blocks if needed)
      */
-    async ensureConfigsLoaded() {
+    ensureConfigsLoaded() {
+        if (this.configsLoaded) return
+
+        if (!this.configPromise) {
+            this.configPromise = this.loadConfigurations()
+        }
+
+        // Block until configs are loaded
+        // Note: This requires the config loading to be completed before first use
+        if (!this.configsLoaded) {
+            throw new Error('Vuetify adapter configs not loaded. Call await adapter.initialize() first.')
+        }
+    }
+
+    /**
+     * Initialize adapter asynchronously (must be called before use)
+     */
+    async initialize() {
+        if (!this.configsLoaded) {
+            await this.loadConfigurations()
+        }
+        return this
+    }
+
+    /**
+     * Load configurations asynchronously
+     */
+    async loadConfigurations() {
         if (this.configsLoaded) return
 
         if (!existsSync(this.configDir)) {

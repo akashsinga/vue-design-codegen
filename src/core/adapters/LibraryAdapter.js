@@ -14,8 +14,8 @@ export class LibraryAdapter {
 
     /**
      * Get library-specific component name
-     * @param {String} semanticName - OP Name
-     * @returns {String} - Name in the Library
+     * @param {String} semanticName - Generic component name
+     * @returns {String} - Library-specific component name
      */
     getComponent(semanticName) {
         return this.componentMap.get(semanticName) || semanticName
@@ -23,17 +23,17 @@ export class LibraryAdapter {
 
     /**
      * Generate import statement for component
-     * @param {Object} config - Component Config
+     * @param {String} componentName - Component name (not config object)
      * @returns {String} Import statement
      */
-    getImportStatement(config) {
+    getImportStatement(componentName) {
         throw new Error(`${this.name} Adapter must implement getImportStatement()`)
     }
 
     /**
      * Register Component Mapping
-     * @param {String} semanticName - OP Name
-     * @param {String} libraryName - Name in the library
+     * @param {String} semanticName - Generic component name
+     * @param {String} libraryName - Library-specific component name
      */
     registerComponent(semanticName, libraryName) {
         this.componentMap.set(semanticName, libraryName)

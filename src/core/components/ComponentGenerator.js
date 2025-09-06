@@ -7,8 +7,7 @@
 
 import { ensureDirSync, writeFileSync } from 'fs-extra'
 import chalk from 'chalk'
-import { path } from 'path'
-
+import path from 'path'
 import { TransformationEngine } from './TransformationEngine.js'
 
 export class ComponentGenerator {
@@ -28,11 +27,19 @@ export class ComponentGenerator {
     async generateComponent(config) {
         this.validateConfig(config)
 
-        const templateData = this.buildTemplateData(config)
+        const templateData = await this.buildTemplateData(config)
         const componentCode = this.renderTemplate(templateData)
         const outputPath = this.writeComponent(config.name, componentCode)
 
-        return { name: config.name, path: outputPath, metadata: { generatedAt: new Date().toISOString(), library: this.libraryAdapter?.name || 'generic', templateType: this.templateType } }
+        return {
+            name: config.name,
+            path: outputPath,
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                library: this.libraryAdapter?.name || 'generic',
+                templateType: this.templateType
+            }
+        }
     }
 
     /**
@@ -40,9 +47,9 @@ export class ComponentGenerator {
      * @param {Object} config
      * @returns {Object} All data.
      */
-    buildTemplateData(config) {
-        const baseComponent = this.getBaseComponent(config)
-        const importStatement = this.getImportStatement(config)
+    async buildTemplateData(config) {
+        const baseComponent = await this.getBaseComponent(config)
+        const importStatement = await this.getImportStatement(config)
 
         return {
             componentName: config.name,
@@ -247,14 +254,8 @@ export class ComponentGenerator {
             throw new Error('Component configuration must specify a baseComponent')
         }
 
-        // Warn if using adapter but component not registered
-        if (this.libraryAdapter && !this.libraryAdapter.hasComponent(config.baseComponent)) {
-            console.warn(`Component '${config.baseComponent}' not registered in ${this.libraryAdapter.name} adapter`)
-        }
-
         return true
     }
-
 
     /**
      * Set library adapter and update transformation engine
