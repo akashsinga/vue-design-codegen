@@ -116,19 +116,19 @@ export const lightTheme = {
         'icon-disabled': colors.neutral[400],
 
         // State layer colors (for hover, focus, pressed states)
-        'state-hover': `${colors.neutral[900]} / 0.08`,
-        'state-focus': `${colors.neutral[900]} / 0.12`,
-        'state-pressed': `${colors.neutral[900]} / 0.16`,
-        'state-dragged': `${colors.neutral[900]} / 0.16`,
+        'state-hover': `${colors.neutral[900]}`,
+        'state-focus': `${colors.neutral[900]}`,
+        'state-pressed': `${colors.neutral[900]}`,
+        'state-dragged': `${colors.neutral[900]}`,
 
         // Brand state layers
-        'primary-state-hover': `${colors.primary[500]} / 0.08`,
-        'primary-state-focus': `${colors.primary[500]} / 0.12`,
-        'primary-state-pressed': `${colors.primary[500]} / 0.16`,
+        'primary-state-hover': `${colors.primary[500]}`,
+        'primary-state-focus': `${colors.primary[500]}`,
+        'primary-state-pressed': `${colors.primary[500]}`,
 
         // Utility colors
-        transparent: 'transparent',
-        'current-color': 'currentColor'
+        // transparent: 'transparent',
+        // 'current-color': 'currentColor'
     },
     // Typography semantic mappings
     typography: {
@@ -264,12 +264,12 @@ export const lightTheme = {
                 color: colors.primary[900]
             },
             outlined: {
-                backgroundColor: 'transparent',
+                // backgroundColor: 'transparent',
                 color: colors.primary[500],
                 borderColor: colors.primary[500]
             },
             text: {
-                backgroundColor: 'transparent',
+                // backgroundColor: 'transparent',
                 color: colors.primary[500]
             }
         }

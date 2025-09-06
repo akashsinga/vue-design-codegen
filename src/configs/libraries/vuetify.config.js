@@ -46,7 +46,7 @@ export default {
             },
             switchLibraryTheme(themeName) {
                 if (vuetify?.theme) {
-                    vuetify.theme.global.name.value = themeName
+                    vuetify.theme.change(themeName)
                 }
             }
         `
