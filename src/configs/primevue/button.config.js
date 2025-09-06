@@ -24,7 +24,7 @@ export default {
         { type: 'direct', source: 'size', target: 'size' },
         { type: 'direct', source: 'disabled', target: 'disabled' },
         { type: 'direct', source: 'loading', target: 'loading' },
-        { type: 'direct', source: 'icon', target: ' icon' },
+        { type: 'direct', source: 'icon', target: 'icon' },
         { type: 'conditional', source: 'iconPosition', target: 'iconPos', condition: 'iconPosition === "right"', fallback: '"left"' }
     ],
     events: [

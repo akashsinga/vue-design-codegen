@@ -1,12 +1,12 @@
 /**
  * Adapter Implementation for Vuetify.
- * Extends LibraryAdapter
+ * Extends LibraryAdapter with ES Module support
  * 
  * File: src/core/adapters/VuetifyAdapter.js
  */
 
 import { LibraryAdapter } from './LibraryAdapter.js'
-import { readdirSync, existsSync, readdir } from 'fs'
+import { readdirSync, existsSync } from 'fs'
 import chalk from 'chalk'
 import path from 'path'
 
@@ -14,18 +14,18 @@ export class VuetifyAdapter extends LibraryAdapter {
     constructor(version = '3.6.1') {
         super('vuetify', version)
         this.configsLoaded = false
-        this.configDir = path.resolve()
+        this.configDir = path.resolve('./src/configs/vuetify')
     }
 
     /**
      * Returns import statement for the given component.
-     * @param {Object} config
+     * @param {String} componentName - Component name
      * @returns {String}
      */
-    getImportStatement(config) {
-        this.ensureConfigsLoaded()
-        const actualComponent = config.baseComponent
-        return `import { ${actualComponent} } from vuetify/components`
+    async getImportStatement(componentName) {
+        await this.ensureConfigsLoaded()
+        const actualComponent = this.getComponent(componentName)
+        return `import { ${actualComponent} } from 'vuetify/components'`
     }
 
     /**
@@ -33,15 +33,25 @@ export class VuetifyAdapter extends LibraryAdapter {
      * @param {String} semanticName
      * @returns {String}
      */
-    getComponent(semanticName) {
-        this.ensureConfigsLoaded()
+    async getComponent(semanticName) {
+        await this.ensureConfigsLoaded()
         return super.getComponent(semanticName)
     }
 
     /**
-     * Lazy load confiugrations when first needed.
+     * Check if component is registered
+     * @param {String} semanticName
+     * @returns {Boolean}
      */
-    ensureConfigsLoaded() {
+    async hasComponent(semanticName) {
+        await this.ensureConfigsLoaded()
+        return super.hasComponent(semanticName)
+    }
+
+    /**
+     * Lazy load configurations when first needed.
+     */
+    async ensureConfigsLoaded() {
         if (this.configsLoaded) return
 
         if (!existsSync(this.configDir)) {
@@ -53,12 +63,16 @@ export class VuetifyAdapter extends LibraryAdapter {
         try {
             const configFiles = readdirSync(this.configDir).filter(file => file.endsWith('.config.js'))
 
-            for (const configFile of configFiles) {
-                const configPath = path.join(this.configDir, configFile)
-                this.loadConfigFileSync(configPath)
-            }
+            // Load all configs in parallel
+            await Promise.all(
+                configFiles.map(configFile => {
+                    const configPath = path.join(this.configDir, configFile)
+                    return this.loadConfigFileAsync(configPath)
+                })
+            )
 
             this.configsLoaded = true
+            console.log(chalk.green(`Loaded ${configFiles.length} Vuetify component configs`))
         } catch (error) {
             console.log(chalk.yellow(`Error loading Vuetify configurations: ${error.message}`))
             this.configsLoaded = true
@@ -66,13 +80,14 @@ export class VuetifyAdapter extends LibraryAdapter {
     }
 
     /**
-     * Load config file synchronously
+     * Load config file using ES module imports
      * @param {String} configPath
      */
-    loadConfigFileSync(configPath) {
+    async loadConfigFileAsync(configPath) {
         try {
-            delete require.cache[require.resolve(configPath)]
-            const config = require(configPath).default || require(configPath)
+            // Use dynamic import with cache busting for development
+            const module = await import(`${configPath}?t=${Date.now()}`)
+            const config = module.default || module
 
             if (config && config.baseComponent) {
                 this.registerComponent(config.name, config.baseComponent)

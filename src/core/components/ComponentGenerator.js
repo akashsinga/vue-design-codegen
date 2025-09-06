@@ -5,8 +5,9 @@
  * File: src/core/components/ComponentGenerator.js
  */
 
-import { ensureDirSync, writeFileSync } from "fs"
+import { ensureDirSync, writeFileSync } from 'fs-extra'
 import chalk from 'chalk'
+import { path } from 'path'
 
 import { TransformationEngine } from './TransformationEngine.js'
 
@@ -25,7 +26,7 @@ export class ComponentGenerator {
      * @returns {Object} Generation result with paths and metadata
      */
     async generateComponent(config) {
-        this.validateConfiig(config)
+        this.validateConfig(config)
 
         const templateData = this.buildTemplateData(config)
         const componentCode = this.renderTemplate(templateData)

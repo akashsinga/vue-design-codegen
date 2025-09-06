@@ -23,10 +23,10 @@ export class LibraryAdapter {
 
     /**
      * Generate import statement for component
-     * @param {String} componentName - Library Name
+     * @param {Object} config - Component Config
      * @returns {String} Import statement
      */
-    getImportStatement(componentName) {
+    getImportStatement(config) {
         throw new Error(`${this.name} Adapter must implement getImportStatement()`)
     }
 
@@ -44,7 +44,7 @@ export class LibraryAdapter {
      * @param {String} semanticName
      * @returns {Boolean}
      */
-    isComponentRegistered(semanticName) {
+    hasComponent(semanticName) {
         return this.componentMap.has(semanticName)
     }
 

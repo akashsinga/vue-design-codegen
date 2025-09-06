@@ -40,6 +40,9 @@ export class TransformationEngine {
             case 'conditional':
                 return this.generateConditionalBinding(mapping)
 
+            case 'value':
+                return this.generateValueBinding(mapping)
+
             case 'computed':
                 return this.generateComputedBinding(mapping)
 
@@ -70,6 +73,15 @@ export class TransformationEngine {
         const fallback = mapping.fallback || 'undefined'
 
         return `:${mapping.target}="${condition} ? ${mapping.source} : ${fallback}"`
+    }
+
+    /**
+     * Generate value transformation binding (uses computed property)
+     */
+    generateValueBinding(mapping) {
+        // For value transformations, we need to create a computed property
+        const computedName = `computed${mapping.target.charAt(0).toUpperCase() + mapping.target.slice(1)}`
+        return `:${mapping.target}="${computedName}"`
     }
 
     /**
@@ -157,7 +169,9 @@ export class TransformationEngine {
             return ''
         }
 
-        const computedProps = propMappings.filter(mapping => mapping.type === 'computed')
+        const computedProps = propMappings.filter(mapping =>
+            mapping.type === 'computed' || mapping.type === 'value'
+        )
 
         if (computedProps.length === 0) {
             return ''
@@ -168,8 +182,15 @@ export class TransformationEngine {
         lines.push('  computed: {')
 
         computedProps.forEach((mapping, index) => {
-            lines.push(`    ${mapping.computedRef}() {`)
-            lines.push(`      ${mapping.computation}`)
+            if (mapping.type === 'computed') {
+                lines.push(`    ${mapping.computedRef}() {`)
+                lines.push(`      ${mapping.computation}`)
+            } else if (mapping.type === 'value') {
+                const computedName = `computed${mapping.target.charAt(0).toUpperCase() + mapping.target.slice(1)}`
+                lines.push(`    ${computedName}() {`)
+                lines.push(`      return ${mapping.transform}(this.${mapping.source})`)
+            }
+
             const isLast = index === computedProps.length - 1
             lines.push(`    }${isLast ? '' : ','}`)
         })
@@ -234,6 +255,10 @@ export class TransformationEngine {
             errors.push(`Computed mapping '${mapping.target}' missing computedRef - would create runtime overhead`)
         }
 
+        if (mapping.type === 'value' && !mapping.transform) {
+            errors.push(`Value mapping '${mapping.target}' missing transform function`)
+        }
+
         // Ensure conditional mappings are template-resolvable
         if (mapping.type === 'conditional' && mapping.condition && mapping.condition.includes('function')) {
             errors.push(`Conditional mapping '${mapping.target}' contains function - must be template expression`)
@@ -262,6 +287,15 @@ export class TransformationEngine {
                     target: 'iconPos',
                     condition: 'iconPosition === "right"',
                     fallback: '"left"'
+                }
+            },
+            value: {
+                description: 'Transform prop value using function (generates computed property)',
+                example: {
+                    type: 'value',
+                    source: 'rounded',
+                    target: 'rounded',
+                    transform: '(val) => val ? "xl" : false'
                 }
             },
             computed: {
