@@ -9,6 +9,8 @@ import { rollup } from 'rollup'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import terser from '@rollup/plugin-terser'
+import vue from 'rollup-plugin-vue'
+import postcss from 'rollup-plugin-postcss'
 import { pathToFileURL } from 'url'
 import chalk from 'chalk'
 import path from 'path'
@@ -66,6 +68,12 @@ export class BundleGenerator {
 
         await this.copyThemeTransformer()
 
+        // Create design-system.js that components will import from
+        const designSystemContent = `// Self-contained design system entry point
+export * from './core.js'
+`
+        writeFileSync(path.join(this.outputDir, 'lib', 'design-system.js'), designSystemContent)
+
         console.log(chalk.green('✅ Core files generated'))
     }
 
@@ -73,12 +81,20 @@ export class BundleGenerator {
         const lines = []
         const { setup } = this.libraryConfig
 
-        lines.push('// Design System Core Library')
-        lines.push(`// Auto-configures ${this.libraryName} with design tokens`)
+        lines.push('// Design System Core Library - Self-Contained')
+        lines.push(`// Includes ${this.libraryName} components and design tokens`)
         lines.push('')
 
-        lines.push('// Library imports')
+        // Include the actual library components in the bundle
+        lines.push('// Library imports (these will be bundled)')
         setup.imports.forEach(importLine => lines.push(importLine))
+        lines.push('')
+
+        // Re-export the library components for internal use
+        this.generatedComponents.forEach(comp => {
+            const baseComponent = this.adapter.getComponent(comp.originalName)
+            lines.push(`export { ${baseComponent} }`)
+        })
         lines.push('')
 
         lines.push('// Internal imports')
@@ -89,35 +105,17 @@ export class BundleGenerator {
         lines.push(`export const designTokens = ${JSON.stringify(this.designTokens, null, 2)}`)
         lines.push('')
 
-        lines.push('// Component re-exports')
-        this.generatedComponents.forEach(comp => {
-            const baseComponent = this.adapter.getComponent(comp.originalName)
-            const importStatement = this.adapter.getImportStatement(comp.originalName)
-            const importPath = importStatement.match(/'([^']+)'/)?.[1] || 'vue'
-            lines.push(`export { ${baseComponent} } from '${importPath}'`)
-        })
-        lines.push('')
-
+        // ... rest of setupLibrary function stays the same
         lines.push('// Library setup function')
         lines.push('export function setupLibrary(app, options = {}) {')
-        lines.push('  // Initialize theme transformer')
-        lines.push(`  const transformer = new ThemeTransformer('${this.libraryName}')`)
+        lines.push('  const transformer = new ThemeTransformer(\'' + this.libraryName + '\')')
         lines.push('  const transformedThemes = transformer.transform(designTokens)')
-        lines.push('')
-        lines.push('  // Setup library with transformed themes')
         lines.push('  const themeConfig = transformedThemes')
-        lines.push('')
-        lines.push('  // Initialize library')
         lines.push(`  ${setup.initialization}`)
-        lines.push('')
-        lines.push('  // Apply theme configuration')
         lines.push(`  ${setup.themeApplication}`)
-        lines.push('')
-        lines.push('  // Add utilities')
         lines.push('  app.config.globalProperties.$dsUtils = {')
         lines.push(`    ${setup.utilities}`)
         lines.push('  }')
-        lines.push('')
         lines.push('  return { themeConfig, transformer }')
         lines.push('}')
 
@@ -437,9 +435,22 @@ export class BundleGenerator {
 
         const bundle = await rollup({
             input: inputFile,
-            external: ['vue', ...this.libraryConfig.bundle.external],
+            external: ['vue'],
             plugins: [
-                resolve({ preferBuiltins: false, browser: true }),
+                vue({
+                    css: false, // Let postcss handle CSS
+                    compileTemplate: true
+                }),
+                postcss({
+                    extract: true, // Extract CSS to separate file
+                    minimize: true, // Minify CSS
+                    sourceMap: false
+                }),
+                resolve({
+                    preferBuiltins: false,
+                    browser: true,
+                    extensions: ['.js', '.vue', '.ts', '.css']
+                }),
                 commonjs(),
                 terser({ format: { comments: false } })
             ]

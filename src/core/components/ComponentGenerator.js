@@ -240,8 +240,13 @@ export class ComponentGenerator {
         const baseComponent = this.getBaseComponent(config)
 
         if (this.bundleMode) {
-            // In bundle mode, import from internal library path
-            return `import { ${baseComponent} } from '${this.internalLibraryPath}'`
+            // In bundle mode, import directly from the library instead of internal path
+            // This avoids the circular dependency issue
+            if (this.libraryAdapter && this.libraryAdapter.hasComponent(config.name)) {
+                return this.libraryAdapter.getImportStatement(config.name)
+            }
+            console.log(chalk.yellow(`Component ${config.baseComponent} not found in ${this.libraryAdapter?.name || 'adapter'}, using fallback import`))
+            return `// WARNING: Import for ${config.baseComponent} not found`
         }
 
         // Development mode - use adapter import statements
