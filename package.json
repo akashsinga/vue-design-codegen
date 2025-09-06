@@ -8,10 +8,11 @@
   "license": "MIT",
   "scripts": {
     "build": "node src/scripts/build.js",
-    "build:poc": "node src/scripts/build.js --library=vuetify --bundle=treeshake",
-    "build:vuetify": "node src/scripts/build.js --library=vuetify",
-    "build:primevue": "node src/scripts/build.js --library=primevue",
+    "build:vuetify": "node src/scripts/build.js --library=vuetify --bundle=treeshake",
+    "build:primevue": "node src/scripts/build.js --library=primevue --bundle=treeshake",
     "generate": "node src/scripts/generate.js generate",
+    "validate": "node src/scripts/generate.js validate",
+    "migrate": "node src/scripts/generate.js migrate",
     "dev": "vite",
     "preview": "vite preview"
   },

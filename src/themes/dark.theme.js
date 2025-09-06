@@ -4,12 +4,12 @@
  * Follows Material Design 3 dark theme principles with proper contrast and accessibility
  */
 
-import { colors } from '../base/colors.js'
-import { typography } from '../base/typography.js'
-import { spacingTokens } from '../base/spacing.js'
-import { shadowTokens } from '../base/shadows.js'
-import { borderTokens } from '../base/borders.js'
-import { motionTokens } from '../base/motion.js'
+import { colors } from './tokens/colors.tokens.js'
+import { typography } from './tokens/typography.tokens.js'
+import { spacingTokens } from './tokens/spacing.tokens.js'
+import { shadowTokens } from './tokens/shadows.tokens.js'
+import { borderTokens } from './tokens/borders.tokens.js'
+import { motionTokens } from './tokens/motion.tokens.js'
 
 export const darkTheme = {
     // Theme metadata
