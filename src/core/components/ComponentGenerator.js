@@ -87,7 +87,7 @@ export class ComponentGenerator {
 
         const allBindings = [mappedBindings, unmappedBindings].filter(Boolean)
 
-        return allBindings.length > 0 ? '\n    ' + allBindings.join('\n    ') : ''
+        return allBindings.length > 0 ? '   ' + allBindings.join('\n    ') : ''
     }
 
     /**
@@ -142,6 +142,7 @@ export class ComponentGenerator {
         lines.push('')
         lines.push('export default {')
         lines.push('  name: \'{{componentName}}\',')
+        lines.push('  components: { {{baseComponent}} },')
         lines.push('  {{propsDefinition}},')
         lines.push('  emits: [{{emitsArray}}]{{computedProperties}}')
         lines.push('}')
@@ -212,8 +213,8 @@ export class ComponentGenerator {
      * @returns {String}
      */
     getImportStatement(config) {
-        if (this.libraryAdapter && this.libraryAdapter.hasComponent(config.baseComponent)) {
-            return this.libraryAdapter.getImportStatement(config.baseComponent)
+        if (this.libraryAdapter && this.libraryAdapter.hasComponent(config.name)) {
+            return this.libraryAdapter.getImportStatement(config.name)
         }
 
         console.log(chalk.yellow(`Component ${config.baseComponent} not found in ${this.libraryAdapter?.name || 'adapter'}, using fallback import`))
