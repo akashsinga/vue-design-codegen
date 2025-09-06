@@ -22,7 +22,7 @@ export class ComponentGenerator {
 
         // Bundle mode options
         this.bundleMode = options.bundleMode || false
-        this.componentPrefix = options.componentPrefix || (this.bundleMode ? 'DS' : '')
+        this.componentPrefix = options.componentPrefix || (this.bundleMode ? 'OPC' : '')
         this.internalLibraryPath = options.internalLibraryPath || '../lib/design-system.js'
         this.designTokens = options.designTokens || null
     }

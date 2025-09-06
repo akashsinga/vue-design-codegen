@@ -147,7 +147,7 @@ class DesignSystemBuilder {
         const adapter = this.adapters[this.buildOptions.library]()
         await adapter.initialize()
 
-        // Generate components with DS prefix directly to final location
+        // Generate components with OPC prefix directly to final location
         const componentsDir = path.join(this.buildOptions.output, 'components')
         mkdirSync(componentsDir, { recursive: true })
 
@@ -156,7 +156,7 @@ class DesignSystemBuilder {
             outputDir: componentsDir,
             templateType: 'sfc',
             bundleMode: true,
-            componentPrefix: 'DS'
+            componentPrefix: 'OPC'
         })
 
         const configDir = path.resolve(`./src/configs/${this.buildOptions.library}`)
@@ -188,7 +188,7 @@ class DesignSystemBuilder {
             console.log(chalk.green(`  ✅ Generated ${result.name}`))
         }
 
-        console.log(chalk.green(`✅ Generated ${this.generatedComponents.length} components with DS prefix`))
+        console.log(chalk.green(`✅ Generated ${this.generatedComponents.length} components with OPC prefix`))
     }
 
     async createBundle() {

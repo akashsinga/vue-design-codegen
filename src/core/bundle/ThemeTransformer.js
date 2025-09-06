@@ -55,14 +55,14 @@ export class ThemeTransformer {
         // Extract color variables
         if (themeData.colors) {
             Object.entries(themeData.colors).forEach(([key, value]) => {
-                cssVars[`--ds-color-${key}`] = value
+                cssVars[`--opc-color-${key}`] = value
             })
         }
 
         // Extract spacing variables  
         if (themeData.spacing) {
             Object.entries(themeData.spacing).forEach(([key, value]) => {
-                cssVars[`--ds-spacing-${key}`] = value
+                cssVars[`--opc-spacing-${key}`] = value
             })
         }
 
@@ -71,10 +71,10 @@ export class ThemeTransformer {
             Object.entries(themeData.typography).forEach(([key, value]) => {
                 if (typeof value === 'object') {
                     Object.entries(value).forEach(([subKey, subValue]) => {
-                        cssVars[`--ds-typography-${key}-${subKey}`] = subValue
+                        cssVars[`--opc-typography-${key}-${subKey}`] = subValue
                     })
                 } else {
-                    cssVars[`--ds-typography-${key}`] = value
+                    cssVars[`--opc-typography-${key}`] = value
                 }
             })
         }
@@ -82,7 +82,7 @@ export class ThemeTransformer {
         // Extract shadow variables
         if (themeData.shadows) {
             Object.entries(themeData.shadows).forEach(([key, value]) => {
-                cssVars[`--ds-shadow-${key}`] = value
+                cssVars[`--opc-shadow-${key}`] = value
             })
         }
 
@@ -91,10 +91,10 @@ export class ThemeTransformer {
             Object.entries(themeData.borders).forEach(([key, value]) => {
                 if (typeof value === 'object') {
                     Object.entries(value).forEach(([subKey, subValue]) => {
-                        cssVars[`--ds-border-${key}-${subKey}`] = subValue
+                        cssVars[`--opc-border-${key}-${subKey}`] = subValue
                     })
                 } else {
-                    cssVars[`--ds-border-${key}`] = value
+                    cssVars[`--opc-border-${key}`] = value
                 }
             })
         }
