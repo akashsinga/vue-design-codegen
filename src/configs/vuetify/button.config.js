@@ -26,7 +26,7 @@ export default {
         { type: 'direct', source: 'disabled', target: 'disabled' },
         { type: 'conditional', source: 'icon', target: 'prependIcon', condition: 'iconPosition === "left" && icon', fallback: 'undefined' },
         { type: 'conditional', source: 'icon', target: 'appendIcon', condition: 'iconPosition === "right" && icon', fallback: 'undefined' },
-        { type: 'value', source: 'rounded', target: 'rounded', transform: '(val) => val ? "xl" : false' }
+        { type: 'direct', source: 'rounded', target: 'rounded' }
     ],
     events: [
         { name: 'click', emit: 'click', payload: 'MouseEvent' },
